@@ -16,15 +16,17 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
-	<key>PlexFrameworkVersion</key>
-	<string>2</string>
-	<key>PlexPluginMode</key>
-	<string>AlwaysOn</string>
 	<key>PlexAgentAttributionText</key>
 	<string>
-    Ciné-Passion Metadata Agent, developed by 
-    &lt;a href=&quot;http://oncleben31.cc&quot;&gt;Oncleben31&lt;/a&gt;&lt;br/&gt;
-    French and English data are hosted on &lt;a href=&quot;http://passion-xbmc.org/scraper/&quot;&gt;Ciné-Passion Database&lt;/a&gt;. Go there to modify data if needed.
-  </string>
+		    Ciné-Passion Metadata Agent, developed by 
+		    &lt;a href=&quot;http://oncleben31.cc&quot;&gt;Oncleben31&lt;/a&gt;&lt;br/&gt;
+		    French and English data are hosted on &lt;a href=&quot;http://passion-xbmc.org/scraper/&quot;&gt;Ciné-Passion Database&lt;/a&gt;. Go there to modify data if needed.
+		  </string>
+	<key>PlexFrameworkVersion</key>
+	<string>2</string>
+	<key>PlexPluginClass</key>
+	<string>Agent</string>
+	<key>PlexPluginMode</key>
+	<string>AlwaysOn</string>
 </dict>
 </plist>
