@@ -1,4 +1,4 @@
-[	
+[
 	{
 		"id":		"pref_user_login",
 		"label":	"Login",
@@ -16,8 +16,8 @@
 		"id":		"pref_rating_source",
 		"label":	"Note / Rating",
 		"type":		"enum",
-		"values":	["AlloCiné", "IMDb", "Ciné-Passion"],
-		"default":	"AlloCiné"
+		"values":	["AlloCin√©", "IMDb", "Cin√©-Passion"],
+		"default":	"AlloCin√©"
 	},
 	{
 		"id":		"pref_content_rating",
