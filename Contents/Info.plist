@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>French</string>
 	<key>CFBundleExecutable</key>
-	<string>Test Plug-in</string>
+	<string>Ciné-Passion</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.plexapp.agents.cinepassion</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -24,9 +24,8 @@
 	<string>AlwaysOn</string>
 	<key>PlexAgentAttributionText</key>
 	<string>
-    Ciné-Passion Metadata Agent, developed by 
-    &lt;a href=&quot;http://oncleben31.cc&quot;&gt;Oncleben31&lt;/a&gt;&lt;br/&gt;
+    Ciné-Passion Metadata Agent, developed by &lt;a href=&quot;http://oncleben31.cc&quot;&gt;Oncleben31&lt;/a&gt;&lt;br/&gt; and Botho
     French and English data are hosted on &lt;a href=&quot;http://passion-xbmc.org/scraper/&quot;&gt;Ciné-Passion Database&lt;/a&gt;. Go there to modify data if needed. NOTICE : You must have a login and be a donator to use it.
-  </string>
+    </string>
 </dict>
 </plist>
