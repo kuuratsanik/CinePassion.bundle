@@ -254,7 +254,7 @@ class CinepassionAgent(Agent.Movies):
 				Log('[cine-passion Agent] : Content rating ('+ content_rating_source + ') is "'+ metadata.content_rating +'" for ' + metadata.title +' ('+ metadata.id +')')
 			
 			#collection
-			Log.Debug('[cine-passion Agent] : pref_ignore_collection  is "'+ str(Prefs["pref_ignore_collection"]) +'"')
+#			Log.Debug('[cine-passion Agent] : pref_ignore_collection  is "'+ str(Prefs["pref_ignore_collection"]) +'"')
 			metadata.collections.clear()
 			if Prefs["pref_ignore_collection"] == False:
 				if updateXMLresult.find('saga').text != None :
