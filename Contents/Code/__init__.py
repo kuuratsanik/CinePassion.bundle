@@ -1,7 +1,7 @@
 #
 # Plex Movie Metadata Agent using Ciné-passion database (French communauty)
 # V1.6 and older By oncleben31 (http://oncleben31.cc) - 2011
-# V1.7 By Botho since OncleBen decided to stop this developpement (https://github.com/botho/CinePassion.bundle/wiki) - 2011
+# V1.7 By Botho since OncleBen decided to stop this developpement (https://github.com/botho/) - 2011
 #
 
 #TODO: Essayer de faire un Agent secondaire pour IMDB juste pour retrouver les informations de type text
@@ -254,7 +254,7 @@ class CinepassionAgent(Agent.Movies):
 				Log('[cine-passion Agent] : Content rating ('+ content_rating_source + ') is "'+ metadata.content_rating +'" for ' + metadata.title +' ('+ metadata.id +')')
 			
 			#collection
-			Log.Debug('[cine-passion Agent] : pref_ignore_collection  is "'+ str(Prefs["pref_ignore_collection"]) +'"')
+#			Log.Debug('[cine-passion Agent] : pref_ignore_collection  is "'+ str(Prefs["pref_ignore_collection"]) +'"')
 			metadata.collections.clear()
 			if Prefs["pref_ignore_collection"] == False:
 				if updateXMLresult.find('saga').text != None :
