@@ -5,7 +5,6 @@
 #
 
 #TODO: Essayer de faire un Agent secondaire pour IMDB juste pour retrouver les informations de type text
-#TODO: ajouter prise en charge des sous titre.
 
 
 import datetime, unicodedata, re, urllib2
@@ -37,12 +36,14 @@ CP_RATING_SOURCE = ''
 
 def Start():
 	HTTP.CacheTime = CACHE_1DAY
+	#Have to see with cine-passion team if a specific AU is needed or not (could be useful to send Plex version for statistics ...)
+	#HTTP.Headers['User-agent'] = CP_USER_AGENT
 	global isPlexVersionOK
 	global currentPlexVersion
 	isPlexVersionOK = False
 	Log("[cine-passion Agent] : Ciné-Passion Metadata Agent version %s started" %(CP_AGENT_VER))
 	
-	#Verify if Plex version is the good one (since 0.9.2.3, Plex don't refresh anymore every two weeks to preserve scrapper database)
+	#Verify if Plex version is the good one (since 0.9.2.3, Plex don't refresh anymore every two weeks to preserve scraper database)
 	versionURL = 'http://127.0.0.1:32400'
 	try:
 		XMLresult = XML.ElementFromURL(versionURL, cacheTime=0)
@@ -56,7 +57,7 @@ def Start():
 			Log("[cine-passion Agent] : Plex Version is compatible with this Ciné-Passion Metadata Agent")
 		else:
 			isPlexVersionOK = False
-			Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent v1.7. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." % (currentPlexVersion))
+			Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent v1.7. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(currentPlexVersion))
 	except Exception, e :
 		Log("[cine-passion Agent] : EXCEPT0 " + str(e))
 		isPlexVersionOK = False
@@ -79,7 +80,7 @@ class CinepassionAgent(Agent.Movies):
 			  media.name = new_name
 			  media.year = new_yearString
 		except:
-			Log("[cine-passion Agent] : Ciné-Passion Agent has return an error when managing the Disney Case.")
+			Log("[cine-passion Agent] : Ciné-Passion Agent has return an error when managing the Disney Case")
 	
 	  	#Launch search on media name using name without accents.
 		searchURL = CP_API_URL + CP_API_SEARCH % (Prefs["pref_user_login"], Prefs["pref_user_passwd"], lang) + CP_API_KEY + String.Quote(self.stripAccents(media.name.encode('utf-8')), usePlus = True)
@@ -91,7 +92,7 @@ class CinepassionAgent(Agent.Movies):
 			hasError = self.checkErrors(searchXMLresult, media.name.encode('utf-8'))
 		
 		except Ex.HTTPError, e:
-			Log("[cine-passion Agent] : HTTP return code is different of 200 : "+ e)
+			Log("[cine-passion Agent] : HTTP return code is different of 200 : " + e)
 		except Exception, e :
 			Log("[cine-passion Agent] : EXCEPT1 " + str(e))
 			hasError = True
@@ -104,7 +105,7 @@ class CinepassionAgent(Agent.Movies):
 			#Analyse the results just with Google
 			self.scrapeXMLsearch(results, media, lang, None, skipCinePassion = True)
 	else:
-		Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent v1.7. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." % (currentPlexVersion))
+		Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent v1.7. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(currentPlexVersion))
 
 
 
@@ -113,7 +114,7 @@ class CinepassionAgent(Agent.Movies):
   	if (isPlexVersionOK == True):
 		try:
 			#Ask for movie information
-			# Cache management to avoid consuming Ciné-Passion database quotas (2011/03 : beware since scrapps are not free anymore)
+			# Cache management to avoid consuming Ciné-Passion database quotas (2011/03 : beware since scraps are not free anymore)
 			pref_cache = Prefs["pref_cache"]
 			if pref_cache == "1 jour/day" :
 				CP_CACHETIME_CP_REQUEST = CACHE_1DAY
@@ -127,14 +128,14 @@ class CinepassionAgent(Agent.Movies):
 			#Test if DDB have return an error
 			hasError = self.checkErrors(updateXMLresult, metadata.title)
 		except Ex.HTTPError, e:
-			Log("[cine-passion Agent] : HTTP return code is different of 200 : "+ e)
+			Log("[cine-passion Agent] : HTTP return code is different of 200 : " + e)
 		except Exception, e :
 			Log("[cine-passion Agent] : EXCEPT2 " + str(e))
 			hasError = True
-			if metadata.title != None :
-				Log("[cine-passion Agent] ERROR : Agent has return an unkown error wile retrieving information for '" + metadata.title +"'")
-			else :
-				Log("[cine-passion Agent] ERROR : Agent has return an unkown error wile retrieving information for ID'" + metadata.id +"'")
+			if metadata.title != None:
+				Log("[cine-passion Agent] ERROR : Agent has return an unkown error wile retrieving information for %" %(metadata.title))
+			else:
+				Log("[cine-passion Agent] ERROR : Agent has return an unkown error wile retrieving information for ID (%s)" %(metadata.id))
 				
 		if (hasError == False) :
 			#genre
@@ -150,15 +151,21 @@ class CinepassionAgent(Agent.Movies):
 			#writers
 			metadata.writers.clear()
 			for writer in updateXMLresult.findall('credits/credit'):
-				metadata.writers.add(writer.text)	
+				metadata.writers.add(writer.text)
+			
+			#countries
+			metadata.countries.clear()
+			for country in updateXMLresult.findall('countries/country'):
+				metadata.countries.add(country.text)	
 	
 			#studios
 			# Just the first one is taken. Plex didn't manage more than one
-			metadata.studio = updateXMLresult.find('studios/studio').text 
+			metadata.studio = updateXMLresult.find('studios/studio').text
 			
 			#runtime
 			runtime = int(updateXMLresult.find('runtime').text) * 60 * 1000           
 			
+			#year
 			year = updateXMLresult.find('year').text
 			if year != "":
 				metadata.year = int(year)             
@@ -166,18 +173,25 @@ class CinepassionAgent(Agent.Movies):
 			#originally_available_at
 			metadata.originally_available_at = Datetime.ParseDate(year).date()
 			
-			#Original title.
+			#original title
 			originalTitle = updateXMLresult.find('originaltitle').text
 			metadata.original_title = originalTitle
 			
 			#title
 			metadata.title = updateXMLresult.find('title').text.replace('&#39;','\'') # Patch to suppress some HTML code in title.
 			
-			#metadata.tagline = updateXMLresult.find('tagline').text  
-			#tagline tag ignored since there are not real tagline in Ciné-passion DDB
-					
+			#summary
 			metadata.summary = updateXMLresult.find('plot').text
-		
+			
+			#trivia
+			metadata.trivia = updateXMLresult.find('information').text
+			
+			#tagline tag ignored since there are not real tagline in Ciné-passion DDB
+			#metadata.tagline = updateXMLresult.find('tagline').text
+			
+			#quotes tag ignored since there are not real quotes in Ciné-passion DDB
+			#metadata.quotes = updateXMLresult.find('quotes').text  
+
 			#Posters and arts
 			@parallelize
 			def LoopForArtsFetching():
@@ -188,7 +202,7 @@ class CinepassionAgent(Agent.Movies):
 				indexImages = 1
 				for image in images:
 					@task
-					def grapArts(metadata = metadata, image = image, indexImages = indexImages):
+					def grapArts(metadata=metadata, image=image, indexImages=indexImages):
 						thumbUrl = image.get('url')
 						url = thumbUrl.replace("/preview/", "/main/")
 					
@@ -203,7 +217,7 @@ class CinepassionAgent(Agent.Movies):
 								posters_valid_names.append(url)
 							except	Exception, e :
 								Log("[cine-passion Agent] : EXCEPT3 " + str(e))
-								Log('[cine-passion Agent] : ERROR when fetching ' + thumbUrl + ' or '+ url)
+								Log('[cine-passion Agent] : ERROR when fetching Poster ' + thumbUrl + ' or ' + url)
 						elif (type == 'Fanart'):
 							try:
 								#Check if main image exist
@@ -214,14 +228,14 @@ class CinepassionAgent(Agent.Movies):
 								art_valid_names.append(url)
 							except	Exception, e :
 								Log("[cine-passion Agent] : EXCEPT4 " + str(e))
-								Log('[cine-passion Agent] : ERROR when fetching ' + thumbUrl + ' or '+ url)
+								Log('[cine-passion Agent] : ERROR when fetching Fanart ' + thumbUrl + ' or ' + url)
 					indexImages = indexImages + 1
 				
 				#supress old unsued pictures
 				metadata.posters.validate_keys(posters_valid_names)
 				metadata.art.validate_keys(art_valid_names)
 				
-			#Rating source selection done by pref pane.
+			#rating source selection done by pref pane.
 			rating_source = Prefs["pref_rating_source"]
 			if rating_source == "AlloCiné":
 				CP_RATING_SOURCE = "allocine"
@@ -239,19 +253,19 @@ class CinepassionAgent(Agent.Movies):
 				role.role = person.get('character')
 				role.actor = person.get('name')
 				role.photo = person.get('thumb')
-				Log('[cine-passion Agent] : Adding actor : ' + role.role + ' (' + role.actor + ')')
+				Log("[cine-passion Agent] : Adding actor %s (%s)" %(role.role, role.actor))
 		
 			#content_rating - Ciné-Passion manage France and USA ratings.
 			content_rating_source = Prefs["pref_content_rating"]
 			CP_content_rating = updateXMLresult.find("certifications/certification[@nation='" + content_rating_source + "']")
-			if CP_content_rating == None :
-				Log('[cine-passion Agent] : Content rating ('+ content_rating_source + ') not found for ' + metadata.title +' ('+ metadata.id +')')
-			else :
-				if content_rating_source == "France" :
+			if CP_content_rating == None:
+				Log("[cine-passion Agent] : Content rating (%s) not found for %s (%s)"  %(content_rating_source, metadata.title, metadata.id))
+			else:
+				if content_rating_source == "France":
 					metadata.content_rating = 'fr/' + CP_content_rating.text
-				else :
+				else:
 					metadata.content_rating = CP_content_rating.text
-				Log('[cine-passion Agent] : Content rating ('+ content_rating_source + ') is "'+ metadata.content_rating +'" for ' + metadata.title +' ('+ metadata.id +')')
+				Log("[cine-passion Agent] : Content rating (%s) is %s for %s (%s)"  %(content_rating_source, metadata.content_rating, metadata.title, metadata.id))
 			
 			#collection
 #			Log.Debug('[cine-passion Agent] : pref_ignore_collection  is "'+ str(Prefs["pref_ignore_collection"]) +'"')
@@ -260,14 +274,13 @@ class CinepassionAgent(Agent.Movies):
 				if updateXMLresult.find('saga').text != None :
 					metadata.collections.add(updateXMLresult.find('saga').text)
 	else:
-		Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent v1.7. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." % (currentPlexVersion))
+		Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent v1.7. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(currentPlexVersion))
 
 			
 	### Tags not used
 	#first_released : not in DDB
 	#tags : not in DDB
-	#trivia : not used
-	#quotes : not in DDB
+	#content_rating_age
 	#banners : not in DDB
 	#themes : not in DDB
 		
@@ -368,7 +381,7 @@ class CinepassionAgent(Agent.Movies):
 					Log("[cine-passion Agent] : EXCEPT6 " + str(e))
 					Log('[cine-passion Agent] : ERROR when parsing ' + url)
 		
-			Log.Debug('[cine-passion Agent] : trouvé '+ str(goodItem-1))
+			Log.Debug("[cine-passion Agent] : trouvé %s" %(str(goodItem-1)))
 	
 	# Finally, remove duplicate entries.
 	results.Sort('score', descending=True)
@@ -385,8 +398,8 @@ class CinepassionAgent(Agent.Movies):
 	
 	# Just for Log
 	for result in results:
-		Log('[cine-passion Agent] : scraped results: ' + result.name + ' | year = ' + str(result.year) + ' | id = ' + result.id + '| score = ' + str(result.score))
-
+		Log("[cine-passion Agent] : scraped results : %s | year = %s | id = %s | score = %s" %(result.name, str(result.year), result.id, str(result.score)))
+		
 
   def checkQuota(self, XMLresult):
 	# This function check the quota of the Ciné-passion DDB
@@ -398,13 +411,13 @@ class CinepassionAgent(Agent.Movies):
 			used = quota.get('use')
 			authorized =  quota.get('authorize')
 			resetDate = quota.get('reset_date')
-			Log('[cine-passion Agent] : Quota : used: ' + used + " on "+ authorized + " | reset date: "+ resetDate)
+			Log("[cine-passion Agent] : Quota : used: %s on %s | reset date: %s" %(used, authorized, resetDate))
 		
 		tagID = XMLresult.find('movie/id')
 		#Double check because root element is different when quota reach.
 		if tagID != None:
 			if tagID.text == "-1":			
-				Log('[cine-passion Agent] : WARNING : Quota reached, no more result before reset.')
+				Log("[cine-passion Agent] : WARNING : Quota reached, no more result before reset")
 				hasError = True
 		
 	except	Exception , e:
@@ -419,7 +432,7 @@ class CinepassionAgent(Agent.Movies):
 	try:
 		hasError = False
 		for i in XMLresult.findall('error'):
-			Log("ERROR : Ciné-Passion API return the error when searching for '"+ name+ "': "+ i.text)
+			Log("ERROR : Ciné-Passion API return the error when searching for %s : %s" %(name, i.text))
 			hasError = True
 		
 		if hasError == False:

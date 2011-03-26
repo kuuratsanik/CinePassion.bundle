@@ -5,7 +5,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>French</string>
 	<key>CFBundleExecutable</key>
-	<string>Ciné-Passion</string>
+	<string></string>
+	<key>CFBundleGetInfoString</key>
+	<string>2011 Botho</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.plexapp.agents.cinepassion</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -13,21 +15,25 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.7</string>
 	<key>CFBundleSignature</key>
-	<string>????</string>
+	<string></string>
 	<key>CFBundleVersion</key>
-	<string>1.7</string>
+	<string>finale</string>
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
 	<key>PlexPluginMode</key>
 	<string>AlwaysOn</string>
 	<key>PlexPluginClass</key>
 	<string>Agent</string>
+	<key>PlexClientPlatforms</key>
+	<string>MacOSX,LGTV</string>
 	<key>PlexAgentAttributionText</key>
 	<string>
     Ciné-Passion Metadata Agent, developed by &lt;a href=&quot;http://oncleben31.cc&quot;&gt;Oncleben31&lt;/a&gt;&lt;br/&gt; and Botho
     French and English data are hosted on &lt;a href=&quot;http://passion-xbmc.org/scraper/&quot;&gt;Ciné-Passion Database&lt;/a&gt;. Go there to modify data if needed. NOTICE : You must have a login and be a donator to use it.
     </string>
     <key>PlexPluginDevMode</key>
+	<string>0</string>
+	<key>PlexPluginConsoleLogging</key>
 	<string>0</string>
 </dict>
 </plist>
