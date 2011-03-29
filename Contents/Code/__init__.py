@@ -285,7 +285,8 @@ class CinepassionAgent(Agent.Movies):
 				#supress old unsued pictures
 				metadata.posters.validate_keys(posters_valid_names)
 				metadata.art.validate_keys(art_valid_names)
-				
+			
+		
 			#rating source selection done by pref pane.
 			rating_source = Prefs["pref_rating_source"]
 			if rating_source == "AlloCiné":
@@ -295,10 +296,12 @@ class CinepassionAgent(Agent.Movies):
 			elif rating_source == "Ciné-Passion":
 				CP_RATING_SOURCE = "cinepassion"
 			
+			
 			cp_rating  = updateXMLresult.find("ratings/rating[@type='" + CP_RATING_SOURCE + "']")
 			if cp_rating > -1:
 				metadata.rating = float(cp_rating.text.replace(',','.'))
-				Log.Debug("[cine-passion Agent] : Adding rating (%s)" %(str(metadata.rating)))
+				Log.Debug("[cine-passion Agent] : Adding %s rating (%s)" %(rating_source, str(metadata.rating)))
+
 
 			#roles
 			cp_roles = updateXMLresult.findall('casting/person')
@@ -319,9 +322,9 @@ class CinepassionAgent(Agent.Movies):
 					metadata.content_rating = 'fr/' + CP_content_rating.text
 				else:
 					metadata.content_rating = CP_content_rating.text
-				Log("[cine-passion Agent] : content_rating (%s) is %s for %s (%s)"  %(content_rating_source, metadata.content_rating, metadata.title, metadata.id))
+				Log.Debug("[cine-passion Agent] : content_rating (%s) is %s for %s (%s)"  %(content_rating_source, metadata.content_rating, metadata.title, metadata.id))
 			else:
-				Log("[cine-passion Agent] : content_rating (%s) not found for %s (%s)"  %(content_rating_source, metadata.title, metadata.id))
+				Log.Debug("[cine-passion Agent] : content_rating (%s) not found for %s (%s)"  %(content_rating_source, metadata.title, metadata.id))
 				
 			
 			#collection

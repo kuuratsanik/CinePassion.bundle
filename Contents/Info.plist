@@ -5,7 +5,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>French</string>
 	<key>CFBundleExecutable</key>
-	<string>Ciné-Passion</string>
+	<string></string>
+	<key>CFBundleGetInfoString</key>
+	<string>2011 Botho</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.plexapp.agents.cinepassion</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -13,9 +15,9 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.7</string>
 	<key>CFBundleSignature</key>
-	<string>????</string>
+	<string></string>
 	<key>CFBundleVersion</key>
-	<string>1.7</string>
+	<string>finale</string>
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
 	<key>PlexPluginClass</key>
