@@ -4,12 +4,13 @@
 # V1.7 By Botho since OncleBen decided to stop this developpement (https://github.com/botho/) - 2011
 #
 
-#TODO: Essayer de faire un Agent secondaire pour IMDB juste pour retrouver les informations de type text
+#TODO : Essayer de faire un Agent secondaire pour IMDB juste pour retrouver les informations de type text
+#TODO : Améliorer la gestion du quota pour éviter les effets de cache
 
 
 import datetime, unicodedata, re, urllib2
 
-CP_AGENT_VER = '1.7'
+CP_AGENT_VER = 'v1.8'
 CP_API_KEY = '8a7129b8f3edd95b7d969dfc2c8e9d9d/'
 # WARNING : If you want to use the Ciné-Passion DDB for your project, don't use this key but 
 # ask a free one on this page : http://passion-xbmc.org/demande-clef-api-api-key-request/
@@ -29,15 +30,14 @@ CP_RESULT_POS_PENALITY = 1
 CP_CACHETIME_CP_SEARCH = CACHE_1DAY
 CP_CACHETIME_CP_FANART = CACHE_1MONTH
 
-#CP_USER_AGENT = 'Test custom UA for Plex Cine-Passion scraper'
+#default Plex UA : Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_4_11; fr-fr; rv:1.9.2.8) Gecko/20100805 Firefox/3.6.8
+CP_AGENT_UA = 'Plex Metadata Agent Cine-Passion %s (Plex Media Server version %s)'
 CP_MIN_PLEX_VERSION = '0923'
 CP_RATING_SOURCE = ''
 
 
 def Start():
 	HTTP.CacheTime = CACHE_1DAY
-	#Have to see with cine-passion team if a specific AU is needed or not (could be useful to send Plex version for statistics ...)
-	#HTTP.Headers['User-agent'] = CP_USER_AGENT
 	global isPlexVersionOK
 	global currentPlexVersion
 	isPlexVersionOK = False
@@ -57,10 +57,14 @@ def Start():
 			Log("[cine-passion Agent] : Plex Version is compatible with this Ciné-Passion Metadata Agent")
 		else:
 			isPlexVersionOK = False
-			Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent v1.7. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(currentPlexVersion))
+			Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent %s. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(CP_AGENT_VER, currentPlexVersion))
 	except Exception, e :
 		Log("[cine-passion Agent] : EXCEPT0 " + str(e))
 		isPlexVersionOK = False
+		
+	#Setting specific user agent for cine-passion scrapper (for statistics usage...)
+	HTTP.Headers['User-agent'] = CP_AGENT_UA %(CP_AGENT_VER, currentPlexVersion)
+	#resultUA = HTTP.Request('http://whatsmyuseragent.com/', cacheTime=0).content
 
 
 class CinepassionAgent(Agent.Movies):
@@ -84,10 +88,10 @@ class CinepassionAgent(Agent.Movies):
 	
 	  	#Launch search on media name using name without accents.
 		searchURL = CP_API_URL + CP_API_SEARCH % (Prefs["pref_user_login"], Prefs["pref_user_passwd"], lang) + CP_API_KEY + String.Quote(self.stripAccents(media.name.encode('utf-8')), usePlus = True)
-	
+
 		try:
 			searchXMLresult = XML.ElementFromURL(searchURL, cacheTime=CP_CACHETIME_CP_SEARCH)
-	
+
 			#Test if DDB have return an error
 			hasError = self.checkErrors(searchXMLresult, media.name.encode('utf-8'))
 		
@@ -96,7 +100,7 @@ class CinepassionAgent(Agent.Movies):
 		except Exception, e :
 			Log("[cine-passion Agent] : EXCEPT1 " + str(e))
 			hasError = True
-			Log("[cine-passion Agent] : Ciné-Passion Agent has return an unkown error wile retrieving search result for '" + media.name.encode('utf-8') +"'")
+			Log("[cine-passion Agent] : Ciné-Passion Agent has return an unkown error wile retrieving search result for %s" %(media.name.encode('utf-8')))
 	
 		if (hasError ==  False) :
 			#Analyse the results
@@ -105,12 +109,12 @@ class CinepassionAgent(Agent.Movies):
 			#Analyse the results just with Google
 			self.scrapeXMLsearch(results, media, lang, None, skipCinePassion = True)
 	else:
-		Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent v1.7. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(currentPlexVersion))
+		Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent %s. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(CP_AGENT_VER, currentPlexVersion))
 
 
 
   def update(self, metadata, media, lang):
-  
+
   	if (isPlexVersionOK == True):
 		try:
 			#Ask for movie information
@@ -122,7 +126,7 @@ class CinepassionAgent(Agent.Movies):
 				CP_CACHETIME_CP_REQUEST = CACHE_1WEEK
 			elif pref_cache == "1 mois/month":
 				CP_CACHETIME_CP_REQUEST = CACHE_1MONTH
-			Log('[cine-passion Agent] : requesting movie with ID "' + metadata.id + '" with cache time set to : ' + str(CP_CACHETIME_CP_REQUEST))
+			Log("[cine-passion Agent] : requesting movie with ID (%s) with cache time set to : %s" %(metadata.id, str(CP_CACHETIME_CP_REQUEST)))
 			updateXMLresult = XML.ElementFromURL(CP_API_URL + CP_API_INFO % (Prefs["pref_user_login"], Prefs["pref_user_passwd"], lang) + CP_API_KEY + metadata.id, cacheTime=CP_CACHETIME_CP_REQUEST)
 		
 			#Test if DDB have return an error
@@ -132,66 +136,113 @@ class CinepassionAgent(Agent.Movies):
 		except Exception, e :
 			Log("[cine-passion Agent] : EXCEPT2 " + str(e))
 			hasError = True
-			if metadata.title != None :
+			if metadata.title != None:
 				Log("[cine-passion Agent] ERROR : Agent has return an unkown error wile retrieving information for %" %(metadata.title))
-			else :
+			else:
 				Log("[cine-passion Agent] ERROR : Agent has return an unkown error wile retrieving information for ID (%s)" %(metadata.id))
 				
 		if (hasError == False) :
 			#genre
-			metadata.genres.clear()
-			for genre in updateXMLresult.findall('genres/genre'):
-				metadata.genres.add(genre.text)
+			cp_genres = updateXMLresult.findall('genres/genre')
+			if cp_genres:
+				metadata.genres.clear()
+				for genre in cp_genres:
+					metadata.genres.add(genre.text)
+					Log.Debug("[cine-passion Agent] : Adding genre : %s" %(genre.text))
 		
 			#director
-			metadata.directors.clear()
-			for director in updateXMLresult.findall('directors/director'):
-				metadata.directors.add(director.text)
+			cp_directors = updateXMLresult.findall('directors/director')
+			if cp_directors:
+				metadata.directors.clear()
+				for director in cp_directors:
+					metadata.directors.add(director.text)
+					Log.Debug("[cine-passion Agent] : Adding director : %s" %(director.text))
 	
 			#writers
-			metadata.writers.clear()
-			for writer in updateXMLresult.findall('credits/credit'):
-				metadata.writers.add(writer.text)
+			cp_writers = updateXMLresult.findall('credits/credit')
+			if cp_writers:
+				metadata.writers.clear()
+				for writer in cp_writers:
+					metadata.writers.add(writer.text)
+					Log.Debug("[cine-passion Agent] : Adding writer : %s" %(writer.text))
 			
 			#countries
-			metadata.countries.clear()
-			for country in updateXMLresult.findall('countries/country'):
-				metadata.countries.add(country.text)	
+			cp_countries = updateXMLresult.findall('countries/country')
+			if cp_countries:
+				metadata.countries.clear()
+				for country in cp_countries:
+					metadata.countries.add(country.text)
+					Log.Debug("[cine-passion Agent] : Adding country : %s" %(country.text))
 	
 			#studios
 			# Just the first one is taken. Plex didn't manage more than one
-			metadata.studio = updateXMLresult.find('studios/studio').text
+			cp_studio = updateXMLresult.find('studios/studio')
+			if cp_studio > -1:
+				metadata.studio = cp_studio.text
+				Log.Debug("[cine-passion Agent] : Adding studio : %s" %(metadata.studio))
 			
 			#runtime
-			runtime = int(updateXMLresult.find('runtime').text) * 60 * 1000           
+			cp_runtime = updateXMLresult.find('runtime')
+			if cp_runtime > -1:
+				runtime = int(cp_runtime.text) * 60 * 1000    
+				Log.Debug("[cine-passion Agent] : Adding runtime : %s" %(str(runtime)))
 			
-			#year
-			year = updateXMLresult.find('year').text
-			if year != "":
-				metadata.year = int(year)             
-		
-			#originally_available_at
-			metadata.originally_available_at = Datetime.ParseDate(year).date()
+			#year and originally_available_at
+			cp_year = updateXMLresult.find('year')
+			if cp_year > -1:
+				metadata.year = int(cp_year.text)
+				#originally_available_at
+				metadata.originally_available_at = Datetime.ParseDate(cp_year.text).date()
+				Log.Debug("[cine-passion Agent] : Adding year : %s" %(str(metadata.year)))
+				Log.Debug("[cine-passion Agent] : Adding originally_available_at : %s" %(str(metadata.originally_available_at)))
 			
-			#original title
-			originalTitle = updateXMLresult.find('originaltitle').text
-			metadata.original_title = originalTitle
+			#original_title
+			cp_originalTitle = updateXMLresult.find('originaltitle')
+			if cp_originalTitle > -1:
+				metadata.original_title = cp_originalTitle.text
+				Log.Debug("[cine-passion Agent] : Adding original_title : %s" %(metadata.original_title))
 			
 			#title
-			metadata.title = updateXMLresult.find('title').text.replace('&#39;','\'') # Patch to suppress some HTML code in title.
+			cp_title = updateXMLresult.find('title')
+			if cp_title > -1:
+				metadata.title = cp_title.text.replace('&#39;','\'') # Patch to suppress some HTML code in title.
+				Log.Debug("[cine-passion Agent] : Adding title : %s" %(metadata.title))
 			
 			#summary
-			metadata.summary = updateXMLresult.find('plot').text
+			cp_summary = updateXMLresult.find('plot')
+			if cp_summary > -1:
+				metadata.summary = cp_summary.text
+				Log.Debug("[cine-passion Agent] : Adding summary : %s" %(metadata.summary))
 			
 			#trivia
-			metadata.trivia = updateXMLresult.find('information').text
+			cp_information = updateXMLresult.find('information')
+			if cp_information > -1:
+				metadata.trivia = cp_information.text
+				Log.Debug("[cine-passion Agent] : Adding trivia : %s" %(metadata.trivia))
 			
-			#tagline tag ignored since there are not real tagline in Ciné-passion DDB
-			#metadata.tagline = updateXMLresult.find('tagline').text
-			
+			#tagline tag should be ignored since there are not real tagline in Ciné-passion DDB : it's only the plot's begining
+				#Pref file
+				#{
+				#"id":		"pref_ignore_tagline",
+				#"label":	"Ignore Taglines",
+				#"type":		"bool",
+				#"default":	"true"
+				#}
+			#if Prefs["pref_ignore_tagline"] == False:
+			#	cp_tagline = updateXMLresult.find('tagline')
+			#	if cp_tagline > -1:
+			#		metadata.tagline = cp_tagline.text
+			#		Log.Debug("[cine-passion Agent] : Adding tagline : %s" %(metadata.tagline))
+			#else:
+			#	metadata.tagline = " "
+			#	Log.Debug("[cine-passion Agent] : Deleting tagline : %s" %(metadata.tagline))
+				
 			#quotes tag ignored since there are not real quotes in Ciné-passion DDB
-			#metadata.quotes = updateXMLresult.find('quotes').text  
-
+			cp_quotes = updateXMLresult.find('quotes')
+			if cp_quotes > -1:
+				metadata.quotes = cp_quotes.text
+				Log.Debug("[cine-passion Agent] : Adding quotes : %s" %(metadata.quotes))
+			
 			#Posters and arts
 			@parallelize
 			def LoopForArtsFetching():
@@ -217,7 +268,7 @@ class CinepassionAgent(Agent.Movies):
 								posters_valid_names.append(url)
 							except	Exception, e :
 								Log("[cine-passion Agent] : EXCEPT3 " + str(e))
-								Log('[cine-passion Agent] : ERROR when fetching Poster ' + thumbUrl + ' or ' + url)
+								Log("[cine-passion Agent] : ERROR when fetching Poster %s or %s" %(thumbUrl, url))
 						elif (type == 'Fanart'):
 							try:
 								#Check if main image exist
@@ -228,7 +279,7 @@ class CinepassionAgent(Agent.Movies):
 								art_valid_names.append(url)
 							except	Exception, e :
 								Log("[cine-passion Agent] : EXCEPT4 " + str(e))
-								Log('[cine-passion Agent] : ERROR when fetching Fanart ' + thumbUrl + ' or ' + url)
+								Log("[cine-passion Agent] : ERROR when fetching Fanart %s or %s" %(thumbUrl, url))
 					indexImages = indexImages + 1
 				
 				#supress old unsued pictures
@@ -244,37 +295,46 @@ class CinepassionAgent(Agent.Movies):
 			elif rating_source == "Ciné-Passion":
 				CP_RATING_SOURCE = "cinepassion"
 			
-			metadata.rating = float(updateXMLresult.find("ratings/rating[@type='" + CP_RATING_SOURCE + "']").text.replace(',','.'))
-		
-			#roles              
-			metadata.roles.clear()
-			for person in updateXMLresult.findall('casting/person'):
-				role = metadata.roles.new()
-				role.role = person.get('character')
-				role.actor = person.get('name')
-				role.photo = person.get('thumb')
-				Log("[cine-passion Agent] : Adding actor %s (%s)" %(role.role, role.actor))
+			cp_rating  = updateXMLresult.find("ratings/rating[@type='" + CP_RATING_SOURCE + "']")
+			if cp_rating > -1:
+				metadata.rating = float(cp_rating.text.replace(',','.'))
+				Log.Debug("[cine-passion Agent] : Adding rating (%s)" %(str(metadata.rating)))
+
+			#roles
+			cp_roles = updateXMLresult.findall('casting/person')
+			if cp_roles:
+				metadata.roles.clear()
+				for person in cp_roles:
+					role = metadata.roles.new()
+					role.role = person.get('character')
+					role.actor = person.get('name')
+					role.photo = person.get('thumb')
+					Log.Debug("[cine-passion Agent] : Adding actor %s (%s)" %(role.role, role.actor))
 		
 			#content_rating - Ciné-Passion manage France and USA ratings.
 			content_rating_source = Prefs["pref_content_rating"]
 			CP_content_rating = updateXMLresult.find("certifications/certification[@nation='" + content_rating_source + "']")
-			if CP_content_rating == None:
-				Log("[cine-passion Agent] : Content rating (%s) not found for %s (%s)"  %(content_rating_source, metadata.title, metadata.id))
-			else:
+			if CP_content_rating > -1:
 				if content_rating_source == "France":
 					metadata.content_rating = 'fr/' + CP_content_rating.text
 				else:
 					metadata.content_rating = CP_content_rating.text
-				Log("[cine-passion Agent] : Content rating (%s) is %s for %s (%s)"  %(content_rating_source, metadata.content_rating, metadata.title, metadata.id))
+				Log("[cine-passion Agent] : content_rating (%s) is %s for %s (%s)"  %(content_rating_source, metadata.content_rating, metadata.title, metadata.id))
+			else:
+				Log("[cine-passion Agent] : content_rating (%s) not found for %s (%s)"  %(content_rating_source, metadata.title, metadata.id))
+				
 			
 			#collection
-#			Log.Debug('[cine-passion Agent] : pref_ignore_collection  is "'+ str(Prefs["pref_ignore_collection"]) +'"')
-			metadata.collections.clear()
 			if Prefs["pref_ignore_collection"] == False:
-				if updateXMLresult.find('saga').text != None :
-					metadata.collections.add(updateXMLresult.find('saga').text)
+				cp_collection = updateXMLresult.find('saga')
+				if (cp_collection > -1):
+					metadata.collections.clear()
+					if cp_collection.text != None:
+						metadata.collections.add(cp_collection.text)
+						Log.Debug("[cine-passion Agent] : Adding collection : %s %s" %(cp_collection, cp_collection.text))
+						
 	else:
-		Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent v1.7. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(currentPlexVersion))
+		Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent %s. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(CP_AGENT_VER, currentPlexVersion))
 
 			
 	### Tags not used
@@ -471,7 +531,7 @@ class CinepassionAgent(Agent.Movies):
 	if media.year:
 		scorePenalty = scorePenalty + abs(year - int(media.year)) * CP_COEFF_YEAR
 
-	#Use String distance as penalty. Use accents 
+	#Use String distance as penalty. Use accents
 	#nameDist = Util.LevenshteinDistance(self.stripAccents(media.name.lower()), self.stripAccents(name.lower()))
 	#originalNameDist = Util.LevenshteinDistance(self.stripAccents(media.name.lower()), self.stripAccents(originalName.lower()))
 	nameDist = Util.LevenshteinDistance(media.name.lower(), name.lower())
