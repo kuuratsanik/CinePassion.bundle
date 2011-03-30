@@ -1,41 +1,42 @@
 [
-        {
-				"id":		"pref_user_login",
-				"label":	"Login",
-				"type":		"text",
-				"default":	"login"
-		},
-        {
-				"id":		"pref_user_passwd",
-				"label":	"Password / Mot de Passe",
-				"type":		"text",
-				"default":	"password"
-		},
-		{
-                "id":                   "pref_rating_source",
-                "label":                "Rating/Notations source",
-                "type":         "enum",
-                "values":       ["allocine", "imdb", "cinepassion"],
-                "default":      "allocine"
-        },
-		{
-                "id":                   "pref_content_rating",
-                "label":                "Classification",
-                "type":         "enum",
-                "values":       ["France", "USA"],
-                "default":      "France"
-        },
-		{
-                "id":                   "pref_cache",
-                "label":                "Cache",
-                "type":         "enum",
-                "values":       ["1 jour/day", "1 semaine/week", "1 mois/month"],
-                "default":      "1 semaine/week"
-        },
-		{
-				"id": "pref_ignore_collection",
-				"label": "Ignore Collections",
-				"type": "bool",
-				"default":	"false"
-		}
+	{
+		"id":		"pref_user_login",
+		"label":	"Login",
+		"type":		"text",
+		"default":	"login"
+	},
+	{
+		"id":		"pref_user_passwd",
+		"label":	"Mot de Passe / Password",
+		"type":		"text",
+		"option":	"hidden",
+		"default":	""
+	},
+	{
+		"id":		"pref_rating_source",
+		"label":	"Note / Rating",
+		"type":		"enum",
+		"values":	["AlloCiné", "IMDb", "Ciné-Passion"],
+		"default":	"AlloCiné"
+	},
+	{
+		"id":		"pref_content_rating",
+		"label":	"Classification",
+		"type":		"enum",
+		"values":	["France", "USA"],
+		"default":	"France"
+	},
+	{
+		"id":		"pref_cache",
+		"label":	"Cache",
+		"type":		"enum",
+		"values":	["1 jour/day", "1 semaine/week", "1 mois/month"],
+		"default":	"1 semaine/week"
+	},
+	{
+		"id":		"pref_ignore_collection",
+		"label":	"Ignore Collections",
+		"type":		"bool",
+		"default":	"false"
+	}
 ]
