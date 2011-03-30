@@ -10,7 +10,7 @@
 
 import datetime, unicodedata, re, urllib2
 
-CP_AGENT_VER = 'v1.8'
+CP_AGENT_VER = 'v1.8.1'
 CP_API_KEY = '8a7129b8f3edd95b7d969dfc2c8e9d9d/'
 # WARNING : If you want to use the Ciné-Passion DDB for your project, don't use this key but 
 # ask a free one on this page : http://passion-xbmc.org/demande-clef-api-api-key-request/
@@ -141,13 +141,13 @@ class CinepassionAgent(Agent.Movies):
 			else:
 				Log("[cine-passion Agent] ERROR : Agent has return an unkown error wile retrieving information for ID (%s)" %(metadata.id))
 				
-		if (hasError == False) :
+		if (hasError == False):
 			#genre
 			cp_genres = updateXMLresult.findall('genres/genre')
 			if cp_genres:
 				metadata.genres.clear()
 				for genre in cp_genres:
-					metadata.genres.add(genre.text)
+					metadata.genres.add(genre.text.strip())
 					Log.Debug("[cine-passion Agent] : Adding genre : %s" %(genre.text))
 		
 			#director
@@ -155,7 +155,7 @@ class CinepassionAgent(Agent.Movies):
 			if cp_directors:
 				metadata.directors.clear()
 				for director in cp_directors:
-					metadata.directors.add(director.text)
+					metadata.directors.add(director.text.strip())
 					Log.Debug("[cine-passion Agent] : Adding director : %s" %(director.text))
 	
 			#writers
@@ -163,7 +163,7 @@ class CinepassionAgent(Agent.Movies):
 			if cp_writers:
 				metadata.writers.clear()
 				for writer in cp_writers:
-					metadata.writers.add(writer.text)
+					metadata.writers.add(writer.text.strip())
 					Log.Debug("[cine-passion Agent] : Adding writer : %s" %(writer.text))
 			
 			#countries
@@ -171,53 +171,53 @@ class CinepassionAgent(Agent.Movies):
 			if cp_countries:
 				metadata.countries.clear()
 				for country in cp_countries:
-					metadata.countries.add(country.text)
+					metadata.countries.add(country.text.strip())
 					Log.Debug("[cine-passion Agent] : Adding country : %s" %(country.text))
 	
 			#studios
 			# Just the first one is taken. Plex didn't manage more than one
-			cp_studio = updateXMLresult.find('studios/studio')
-			if cp_studio > -1:
-				metadata.studio = cp_studio.text
+			cp_studio = updateXMLresult.findall('studios/studio')
+			if cp_studio != None and cp_studio[0].text != None:
+				metadata.studio = cp_studio[0].text.strip()
 				Log.Debug("[cine-passion Agent] : Adding studio : %s" %(metadata.studio))
 			
 			#runtime
 			cp_runtime = updateXMLresult.find('runtime')
-			if cp_runtime > -1:
-				runtime = int(cp_runtime.text) * 60 * 1000    
+			if cp_runtime != None and cp_runtime.text != None:
+				runtime = int(cp_runtime.text.strip()) * 60 * 1000    
 				Log.Debug("[cine-passion Agent] : Adding runtime : %s" %(str(runtime)))
 			
 			#year and originally_available_at
 			cp_year = updateXMLresult.find('year')
-			if cp_year > -1:
-				metadata.year = int(cp_year.text)
+			if cp_year != None and cp_year.text != None:
+				metadata.year = int(cp_year.text.strip())
 				#originally_available_at
-				metadata.originally_available_at = Datetime.ParseDate(cp_year.text).date()
+				metadata.originally_available_at = Datetime.ParseDate(cp_year.text.strip()).date()
 				Log.Debug("[cine-passion Agent] : Adding year : %s" %(str(metadata.year)))
 				Log.Debug("[cine-passion Agent] : Adding originally_available_at : %s" %(str(metadata.originally_available_at)))
 			
 			#original_title
 			cp_originalTitle = updateXMLresult.find('originaltitle')
-			if cp_originalTitle > -1:
-				metadata.original_title = cp_originalTitle.text
+			if cp_originalTitle != None and cp_originalTitle.text != None:
+				metadata.original_title = cp_originalTitle.text.strip()
 				Log.Debug("[cine-passion Agent] : Adding original_title : %s" %(metadata.original_title))
 			
 			#title
 			cp_title = updateXMLresult.find('title')
-			if cp_title > -1:
-				metadata.title = cp_title.text.replace('&#39;','\'') # Patch to suppress some HTML code in title.
+			if cp_title != None and cp_title.text != None:
+				metadata.title = cp_title.text.strip().replace('&#39;','\'') # Patch to suppress some HTML code in title.
 				Log.Debug("[cine-passion Agent] : Adding title : %s" %(metadata.title))
 			
 			#summary
 			cp_summary = updateXMLresult.find('plot')
-			if cp_summary > -1:
-				metadata.summary = cp_summary.text
+			if cp_summary != None and cp_summary.text != None:
+				metadata.summary = cp_summary.text.strip()
 				Log.Debug("[cine-passion Agent] : Adding summary : %s" %(metadata.summary))
 			
 			#trivia
 			cp_information = updateXMLresult.find('information')
-			if cp_information > -1:
-				metadata.trivia = cp_information.text
+			if cp_information != None and cp_information.text != None:
+				metadata.trivia = cp_information.text.strip()
 				Log.Debug("[cine-passion Agent] : Adding trivia : %s" %(metadata.trivia))
 			
 			#tagline tag should be ignored since there are not real tagline in Ciné-passion DDB : it's only the plot's begining
@@ -230,17 +230,17 @@ class CinepassionAgent(Agent.Movies):
 				#}
 			#if Prefs["pref_ignore_tagline"] == False:
 			#	cp_tagline = updateXMLresult.find('tagline')
-			#	if cp_tagline > -1:
-			#		metadata.tagline = cp_tagline.text
+			#	if cp_tagline != None and cp_tagline.text != None:
+			#		metadata.tagline = cp_tagline.text.strip()
 			#		Log.Debug("[cine-passion Agent] : Adding tagline : %s" %(metadata.tagline))
 			#else:
-			#	metadata.tagline = " "
+			#	metadata.tagline = ' '
 			#	Log.Debug("[cine-passion Agent] : Deleting tagline : %s" %(metadata.tagline))
 				
 			#quotes tag ignored since there are not real quotes in Ciné-passion DDB
 			cp_quotes = updateXMLresult.find('quotes')
-			if cp_quotes > -1:
-				metadata.quotes = cp_quotes.text
+			if cp_quotes != None and cp_quotes.text != None:
+				metadata.quotes = cp_quotes.text.strip()
 				Log.Debug("[cine-passion Agent] : Adding quotes : %s" %(metadata.quotes))
 			
 			#Posters and arts
@@ -263,7 +263,6 @@ class CinepassionAgent(Agent.Movies):
 								#Check if main image exist
 								f = urllib2.urlopen(url)
 								test = f.info().gettype()
-								
 								metadata.posters[url] = Proxy.Preview(HTTP.Request(thumbUrl, cacheTime=CP_CACHETIME_CP_FANART), sort_order = indexImages)
 								posters_valid_names.append(url)
 							except	Exception, e :
@@ -274,7 +273,6 @@ class CinepassionAgent(Agent.Movies):
 								#Check if main image exist
 								f = urllib2.urlopen(url)
 								test = f.info().gettype()
-								
 								metadata.art[url] = Proxy.Preview(HTTP.Request(thumbUrl, cacheTime=CP_CACHETIME_CP_FANART), sort_order = indexImages)
 								art_valid_names.append(url)
 							except	Exception, e :
@@ -298,10 +296,9 @@ class CinepassionAgent(Agent.Movies):
 			
 			
 			cp_rating  = updateXMLresult.find("ratings/rating[@type='" + CP_RATING_SOURCE + "']")
-			if cp_rating > -1:
-				metadata.rating = float(cp_rating.text.replace(',','.'))
+			if cp_rating != None and cp_rating.text != None:
+				metadata.rating = float(cp_rating.text.strip().replace(',','.'))
 				Log.Debug("[cine-passion Agent] : Adding %s rating (%s)" %(rating_source, str(metadata.rating)))
-
 
 			#roles
 			cp_roles = updateXMLresult.findall('casting/person')
@@ -309,19 +306,19 @@ class CinepassionAgent(Agent.Movies):
 				metadata.roles.clear()
 				for person in cp_roles:
 					role = metadata.roles.new()
-					role.role = person.get('character')
-					role.actor = person.get('name')
-					role.photo = person.get('thumb')
+					role.role = person.get('character').strip()
+					role.actor = person.get('name').strip()
+					role.photo = person.get('thumb').strip()
 					Log.Debug("[cine-passion Agent] : Adding actor %s (%s)" %(role.role, role.actor))
 		
 			#content_rating - Ciné-Passion manage France and USA ratings.
 			content_rating_source = Prefs["pref_content_rating"]
 			CP_content_rating = updateXMLresult.find("certifications/certification[@nation='" + content_rating_source + "']")
-			if CP_content_rating > -1:
+			if CP_content_rating != None and CP_content_rating.text != None:
 				if content_rating_source == "France":
-					metadata.content_rating = 'fr/' + CP_content_rating.text
+					metadata.content_rating = 'fr/' + CP_content_rating.text.strip()
 				else:
-					metadata.content_rating = CP_content_rating.text
+					metadata.content_rating = CP_content_rating.text.strip()
 				Log.Debug("[cine-passion Agent] : content_rating (%s) is %s for %s (%s)"  %(content_rating_source, metadata.content_rating, metadata.title, metadata.id))
 			else:
 				Log.Debug("[cine-passion Agent] : content_rating (%s) not found for %s (%s)"  %(content_rating_source, metadata.title, metadata.id))
@@ -330,12 +327,11 @@ class CinepassionAgent(Agent.Movies):
 			#collection
 			if Prefs["pref_ignore_collection"] == False:
 				cp_collection = updateXMLresult.find('saga')
-				if (cp_collection > -1):
-					metadata.collections.clear()
-					if cp_collection.text != None:
-						metadata.collections.add(cp_collection.text)
-						Log.Debug("[cine-passion Agent] : Adding collection : %s %s" %(cp_collection, cp_collection.text))
-						
+				metadata.collections.clear()
+				if cp_collection != None and cp_collection.text != None:
+					metadata.collections.add(cp_collection.text.strip())
+					Log.Debug("[cine-passion Agent] : Adding collection : %s %s" %(cp_collection, cp_collection.text))
+		
 	else:
 		Log("[cine-passion Agent] : You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent %s. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(CP_AGENT_VER, currentPlexVersion))
 
