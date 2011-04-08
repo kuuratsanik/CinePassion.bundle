@@ -1,16 +1,16 @@
 #
 # Plex Movie Metadata Agent using Ciné-passion database (French communauty)
 # V1.6 and older By oncleben31 (http://oncleben31.cc) - 2011
-# V1.7 By Botho since OncleBen decided to stop this developpement (https://github.com/botho/) - 2011
+# V1.7 and aboce By Botho since OncleBen decided to stop this developpement (https://github.com/botho/) - 2011
 #
 
 #TODO : Essayer de faire un Agent secondaire pour IMDB juste pour retrouver les informations de type text
 #TODO : Améliorer la gestion du quota pour éviter les effets de cache
 
 
-import datetime, unicodedata, re, urllib2
+import datetime, unicodedata, re, urllib2, base64, sha
 
-CP_AGENT_VER = 'v1.8.2'
+CP_AGENT_VER = 'v1.9'
 CP_API_KEY = '8a7129b8f3edd95b7d969dfc2c8e9d9d'
 # WARNING : If you want to use the Ciné-Passion DDB for your project, don't use this key but 
 # ask a free one on this page : http://passion-xbmc.org/demande-clef-api-api-key-request/
@@ -59,7 +59,7 @@ def Start():
 			isPlexVersionOK = False
 			Log.Error("[cine-passion Agent] You need minimum Plex version (0.9.2.3) to use Ciné-Passion Agent %s. Your actual Plex version is (%s). Ciné-Passion Metadata Agent will not work." %(CP_AGENT_VER, currentPlexVersion))
 	except Exception, e :
-		Log.Error("[cine-passion Agent] EXCEPT0 " + str(e))
+		Log.Error("[cine-passion Agent] EXCEPT0 : " + str(e))
 		isPlexVersionOK = False
 
 	#Setting specific user agent for cine-passion scrapper (for statistics usage...)
@@ -87,8 +87,7 @@ class CinepassionAgent(Agent.Movies):
 			Log.Error("[cine-passion Agent] Ciné-Passion Agent has return an error when managing the Disney Case")
 
 	  	#Launch search on media name using name without accents.
-		searchURL = CP_API_URL + CP_API_SEARCH % (Prefs["pref_user_login"], Prefs["pref_user_passwd"], lang) + CP_API_KEY + '/' + String.Quote(self.stripAccents(media.name.encode('utf-8')), usePlus = True)
-
+		searchURL = CP_API_URL + CP_API_SEARCH % (base64.b64encode(Prefs["pref_user_login"]), sha.new(Prefs["pref_user_login"].lower()+Prefs["pref_user_passwd"]).hexdigest(), lang) + CP_API_KEY + '/' + String.Quote(self.stripAccents(media.name.encode('utf-8')), usePlus = True)
 		try:
 			searchXMLresult = XML.ElementFromURL(searchURL, cacheTime=CP_CACHETIME_CP_SEARCH)
 
@@ -127,7 +126,7 @@ class CinepassionAgent(Agent.Movies):
 			elif pref_cache == "1 mois/month":
 				CP_CACHETIME_CP_REQUEST = CACHE_1MONTH
 			Log("[cine-passion Agent] requesting movie with ID (%s) with cache time set to : %s" %(metadata.id, str(CP_CACHETIME_CP_REQUEST)))
-			updateXMLresult = XML.ElementFromURL(CP_API_URL + CP_API_INFO % (Prefs["pref_user_login"], Prefs["pref_user_passwd"], lang) + CP_API_KEY + '/' + metadata.id, cacheTime=CP_CACHETIME_CP_REQUEST)
+			updateXMLresult = XML.ElementFromURL(CP_API_URL + CP_API_INFO % (base64.b64encode(Prefs["pref_user_login"]), sha.new(Prefs["pref_user_login"].lower()+Prefs["pref_user_passwd"]).hexdigest(), lang) + CP_API_KEY + '/' + metadata.id, cacheTime=CP_CACHETIME_CP_REQUEST)
 
 			#Test if DDB have return an error
 			hasError = self.checkErrors(updateXMLresult, metadata.title)
@@ -349,7 +348,7 @@ class CinepassionAgent(Agent.Movies):
 	score = 99
 
 	# Search in Ciné-Passion DDB
-	if skipCinePassion == False:
+	if (skipCinePassion == False):
 		# For any <movie> tag in XML response
 		for movie in XMLresult.xpath("//movie"):
 			#find movie information (id, title and year)
