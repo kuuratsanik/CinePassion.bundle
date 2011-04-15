@@ -2,41 +2,41 @@
 	{
 		"id":		"pref_user_login",
 		"label":	"Login",
-		"type":	"text",
+		"type":		"text",
 		"default":	"login"
 	},
 	{
 		"id":		"pref_user_passwd",
 		"label":	"Mot de Passe / Password",
-		"type":	"text",
+		"type":		"text",
 		"option":	"hidden",
 		"default":	""
 	},
 	{
 		"id":		"pref_rating_source",
 		"label":	"Note / Rating",
-		"type":	"enum",
+		"type":		"enum",
 		"values":	["AlloCiné", "IMDb", "Ciné-Passion"],
 		"default":	"AlloCiné"
 	},
 	{
 		"id":		"pref_content_rating",
 		"label":	"Classification",
-		"type":	"enum",
+		"type":		"enum",
 		"values":	["France", "USA"],
 		"default":	"France"
 	},
 	{
 		"id":		"pref_cache",
 		"label":	"Cache",
-		"type":	"enum",
+		"type":		"enum",
 		"values":	["1 jour/day", "1 semaine/week", "1 mois/month"],
 		"default":	"1 semaine/week"
 	},
 	{
 		"id":		"pref_ignore_collection",
 		"label":	"Ignore Collections",
-		"type":	"bool",
+		"type":		"bool",
 		"default":	"false"
 	}
 ]
