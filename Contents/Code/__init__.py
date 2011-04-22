@@ -1,7 +1,7 @@
 #
 # Plex Movie Metadata Agent using Ciné-passion database (French communauty)
 # V1.6 and older By oncleben31 (http://oncleben31.cc) - 2011
-# V1.7 and aboce By Botho since OncleBen decided to stop this developpement (https://github.com/botho/) - 2011
+# V1.7 and above By Botho since OncleBen decided to stop this developpement (https://github.com/botho/) - 2011
 #
 
 #TODO : Essayer de faire un Agent secondaire pour IMDB juste pour retrouver les informations de type text
@@ -10,7 +10,7 @@
 
 import datetime, unicodedata, re, urllib2, base64, sha
 
-CP_AGENT_VER = 'v1.9'
+CP_AGENT_VER = 'v1.9.1'
 CP_API_KEY = '8a7129b8f3edd95b7d969dfc2c8e9d9d'
 # WARNING : If you want to use the Ciné-Passion DDB for your project, don't use this key but 
 # ask a free one on this page : http://passion-xbmc.org/demande-clef-api-api-key-request/
@@ -64,11 +64,12 @@ def Start():
 
 	#Setting specific user agent for cine-passion scrapper (for statistics usage...)
 	HTTP.Headers['User-agent'] = CP_AGENT_UA %(CP_AGENT_VER, currentPlexVersion)
-	#resultUA = HTTP.Request('http://whatsmyuseragent.com/', cacheTime=0).content
+	#resultUA = HTTP.Request('http://whatsmyuseragent.com/', cacheTime=1).content
 
 
 class CinepassionAgent(Agent.Movies):
   name = 'Ciné-Passion'
+  primary_provider = True
   languages = [Locale.Language.French, Locale.Language.English]
   accepts_from = ['com.plexapp.agents.localmedia', 'com.plexapp.agents.opensubtitles']
 
@@ -177,8 +178,7 @@ class CinepassionAgent(Agent.Movies):
 						metadata.countries.add(country.text.strip())
 						Log.Debug("[cine-passion Agent] Adding country : %s" %(country.text))
 	
-			#studios
-			# Just the first one is taken. Plex didn't manage more than one
+			#studios : Just the first one is taken. Plex didn't manage more than one
 			cp_studio = updateXMLresult.findall('studios/studio')
 			if cp_studio and len(cp_studio) > 0:
 				if cp_studio[0].text != None:
@@ -188,8 +188,8 @@ class CinepassionAgent(Agent.Movies):
 			#runtime
 			cp_runtime = updateXMLresult.find('runtime')
 			if cp_runtime != None and cp_runtime.text != None and self.IsInt(cp_runtime.text) == True:
-				runtime = int(cp_runtime.text.strip()) * 60 * 1000    
-				Log.Debug("[cine-passion Agent] Adding runtime : %s" %(str(runtime)))
+				metadata.duration = int(cp_runtime.text.strip()) * 60 * 1000    
+				Log.Debug("[cine-passion Agent] Adding duration : %s" %(str(metadata.duration)))
 			
 			#year and originally_available_at
 			cp_year = updateXMLresult.find('year')
@@ -198,19 +198,25 @@ class CinepassionAgent(Agent.Movies):
 				#originally_available_at
 				metadata.originally_available_at = Datetime.ParseDate(cp_year.text.strip()).date()
 				Log.Debug("[cine-passion Agent] Adding year : %s" %(str(metadata.year)))
-				Log.Debug("[cine-passion Agent] Adding originally_available_at : %s" %(str(metadata.originally_available_at)))
+				Log.Debug("[cine-passion Agent] Adding originally available at : %s" %(str(metadata.originally_available_at)))
 			
 			#original_title
 			cp_originalTitle = updateXMLresult.find('originaltitle')
 			if cp_originalTitle != None and cp_originalTitle.text != None:
 				metadata.original_title = cp_originalTitle.text.strip()
-				Log.Debug("[cine-passion Agent] Adding original_title : %s" %(metadata.original_title))
+				Log.Debug("[cine-passion Agent] Adding original title : %s" %(metadata.original_title))
 			
 			#title
 			cp_title = updateXMLresult.find('title')
 			if cp_title != None and cp_title.text != None:
-				metadata.title = cp_title.text.strip().replace('&#39;','\'') # Patch to suppress some HTML code in title.
+				metadata.title = cp_title.text.strip().replace('&#39;','\'')
 				Log.Debug("[cine-passion Agent] Adding title : %s" %(metadata.title))
+			
+			#title sort => asked to Elan to modify framework for this, waiting ...
+			#cp_title_sort = updateXMLresult.find('sorttitle')
+			#if cp_title_sort != None and cp_title_sort.text != None:
+			#	metadata.title_sort = cp_title_sort.text.strip().replace('&#39;','\'')
+			#	Log.Debug("[cine-passion Agent] Adding title sort : %s" %(metadata.title_sort))
 			
 			#summary
 			cp_summary = updateXMLresult.find('plot')
@@ -259,7 +265,7 @@ class CinepassionAgent(Agent.Movies):
 			cp_rating  = updateXMLresult.find("ratings/rating[@type='" + CP_RATING_SOURCE + "']")
 			if cp_rating != None and cp_rating.text != None:
 				metadata.rating = float(cp_rating.text.strip().replace(',','.'))
-				Log.Debug("[cine-passion Agent] Adding rating %s (%s)" %(rating_source, str(metadata.rating)))
+				Log.Debug("[cine-passion Agent] Adding rating : %s (source - %s)" %(str(metadata.rating), rating_source))
 
 			#roles
 			cp_roles = updateXMLresult.findall('casting/person')
@@ -270,7 +276,7 @@ class CinepassionAgent(Agent.Movies):
 					role.role = person.get('character').strip()
 					role.actor = person.get('name').strip()
 					role.photo = person.get('thumb').strip()
-					Log.Debug("[cine-passion Agent] Adding actor %s (%s)" %(role.role, role.actor))
+					Log.Debug("[cine-passion Agent] Adding actor : %s (%s)" %(role.role, role.actor))
 		
 			#content_rating - Ciné-Passion manage France and USA ratings.
 			content_rating_source = Prefs["pref_content_rating"]
@@ -280,7 +286,7 @@ class CinepassionAgent(Agent.Movies):
 					metadata.content_rating = 'fr/' + CP_content_rating.text.strip()
 				else:
 					metadata.content_rating = CP_content_rating.text.strip()
-				Log.Debug("[cine-passion Agent] content_rating (%s) is %s for %s (%s)"  %(content_rating_source, metadata.content_rating, metadata.title, metadata.id))				
+				Log.Debug("[cine-passion Agent] certifications rating : %s (source - %s)"  %(metadata.content_rating, content_rating_source))				
 			
 			#collection
 			if Prefs["pref_ignore_collection"] == False:
@@ -288,9 +294,9 @@ class CinepassionAgent(Agent.Movies):
 				metadata.collections.clear()
 				if cp_collection != None and cp_collection.text != None:
 					metadata.collections.add(cp_collection.text.strip())
-					Log.Debug("[cine-passion Agent] Adding collection : %s %s" %(cp_collection, cp_collection.text))
+					Log.Debug("[cine-passion Agent] Adding collection : %s" %(cp_collection.text.strip()))
 
-			#Posters and arts
+			#Posters and Fanarts
 			@parallelize
 			def LoopForArtsFetching():
 				posters_valid_names = list()
@@ -336,9 +342,8 @@ class CinepassionAgent(Agent.Movies):
 
 			
 	### Tags not used
-	#first_released : not in DDB
-	#tags : not in DDB
-	#content_rating_age
+	#title_sort : present in DDB but not in Plex framework
+	#content_rating_age : not in DDB
 	#banners : not in DDB
 	#themes : not in DDB
 
@@ -355,8 +360,9 @@ class CinepassionAgent(Agent.Movies):
 			id = movie.find('id').text
 			name = movie.find('title').text.replace('&#39;','\'').replace('&#338;', 'Œ').replace('&amp;#338;', 'Œ') # Patch to suppress some HTML code in title.
 			originalName = movie.find('originaltitle').text
-			if movie.find('year') != None and movie.find('year').text != None and self.IsInt(movie.find('year').text) == True:
-				year = int(movie.find('year').text.strip()) 
+			year = movie.find('year')
+			if year != None and year.text != None and self.IsInt(year.text.strip()) == True:
+				year = int(year.text.strip()) 
 			else:
 				year = None
 			lang = lang
@@ -417,11 +423,11 @@ class CinepassionAgent(Agent.Movies):
 
 				try: 
 					m = re.match('(.*)[ ]+\(([12][0-9]{3})(/[A-Z]+)?\).*$', title)
+					year = None
 					if m:
 					  name,yearString = (m.group(1), m.group(2))
-					  year = int(yearString)
-					else:
-					  year = None
+					  if yearString != None and yearString != '' and self.IsInt(yearString) == True:
+					  	year = int(yearString)
 
 					m = re.match('http://www.allocine.fr/film/fichefilm_gen_cfilm=([0-9]*).html', url)
 					if m:
@@ -481,8 +487,8 @@ class CinepassionAgent(Agent.Movies):
 				Log("[cine-passion Agent] : WARNING : Quota reached, no more result before reset")
 				hasError = True
 
-	except	Exception , e:
-		Log("[cine-passion Agent] : DEBUG EXCEPT7" + str(e))
+	except Exception , e:
+		Log.Error("[cine-passion Agent] EXCEPT7 : " + str(e))
 		hasError = True
 
 	return hasError
@@ -501,7 +507,7 @@ class CinepassionAgent(Agent.Movies):
 			hasError = self.checkQuota(XMLresult)
 
 	except Exception , e:
-		Log("[cine-passion Agent] : EXCEPT8" + str(e))
+		Log.Error("[cine-passion Agent] EXCEPT8 : " + str(e))
 		hasError = True
 
 	return hasError

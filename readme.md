@@ -22,5 +22,6 @@ If you have a bug to report, please include the following information:
 * logs message.
 
 Logs can be found in the `~/Library/Logs/PMS Plugin Logs/com.plexapp.agents.cinepassion.log` files.
+Better, you should use the [Plex Log Catcher](https://github.com/botho/CinePassion.bundle/wiki/Plex-Log-Catcher)
 
-You may also fork this project on Github and create a pull request.
+You may also fork this project on Github and send me a pull request.
