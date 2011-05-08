@@ -10,7 +10,7 @@
 
 import datetime, unicodedata, re, urllib2, base64, sha
 
-CP_AGENT_VER = 'v1.9.1'
+CP_AGENT_VER = 'v1.9.2'
 CP_API_KEY = '8a7129b8f3edd95b7d969dfc2c8e9d9d'
 # WARNING : If you want to use the Ciné-Passion DDB for your project, don't use this key but 
 # ask a free one on this page : http://passion-xbmc.org/demande-clef-api-api-key-request/
@@ -20,7 +20,7 @@ CP_API_SEARCH = 'Movie.Search/%s/%s/Title/%s/XML/'
 CP_API_INFO = 'Movie.GetInfo/%s/%s/ID/%s/XML/'
 CP_API_QUOTA = 'User.GetQuota/%s/%s/%s/XML/'
 
-GOOGLE_JSON_URL = 'http://ajax.googleapis.com/ajax/services/search/web?v=1.0&rsz=large&q=%s'
+GOOGLE_JSON_URL = 'http://ajax.googleapis.com/ajax/services/search/web?v=1.0&userip=%s&rsz=large&q=%s'
 BING_JSON_URL   = 'http://api.bing.net/json.aspx?AppId=BAFE92EAA23CD237BCDAA5AB39137036739F7357&Version=2.2&Query=%s&Sources=web&Web.Count=8&JsonType=raw'
 
 CP_COEFF_YEAR = 3
@@ -381,14 +381,17 @@ class CinepassionAgent(Agent.Movies):
 	  searchYear = ''
 
 	normalizedName = self.stripAccents(media.name)
-	GOOGLE_JSON_QUOTES = GOOGLE_JSON_URL % String.Quote('"' + normalizedName + searchYear + '"', usePlus=True) + '+site:allocine.fr/film/fichefilm_gen_cfilm'
-	GOOGLE_JSON_NOQUOTES = GOOGLE_JSON_URL % String.Quote(normalizedName + searchYear, usePlus=True) + '+site:allocine.fr/film/fichefilm_gen_cfilm'
+	GOOGLE_JSON_QUOTES = GOOGLE_JSON_URL % (self.getPublicIP(), String.Quote('"' + normalizedName + searchYear + '"', usePlus=True)) + '+site:allocine.fr/film/fichefilm_gen_cfilm'
+	GOOGLE_JSON_NOQUOTES = GOOGLE_JSON_URL % (self.getPublicIP(), String.Quote(normalizedName + searchYear, usePlus=True)) + '+site:allocine.fr/film/fichefilm_gen_cfilm'
 	BING_JSON = BING_JSON_URL % String.Quote(normalizedName + searchYear, usePlus=True) + '+site:allocine.fr/film'
 
 	#Reinit classment score since CinePassion can shift good movies.
 	score = 99
 
 	for s in [GOOGLE_JSON_QUOTES, GOOGLE_JSON_NOQUOTES, BING_JSON]:
+		if s == GOOGLE_JSON_QUOTES and (media.name.count(' ') == 0 or media.name.count('&') > 0 or media.name.count(' and ') > 0):
+			# no reason to run this test, plus it screwed up some searches
+			continue
 
 		hasResults = False
 		try:
@@ -555,3 +558,7 @@ class CinepassionAgent(Agent.Movies):
 	except ValueError:
 		ret = False
 	return ret
+
+  def getPublicIP(self):
+    ip = HTTP.Request('http://plexapp.com/ip.php').content.strip()
+    return ip

@@ -30,7 +30,7 @@
 		"id":		"pref_cache",
 		"label":	"Cache",
 		"type":		"enum",
-		"values":	["1 jour/day", "1 semaine/week", "1 mois/month"],
+		"values":	["1 semaine/week", "1 mois/month"],
 		"default":	"1 semaine/week"
 	},
 	{
