@@ -216,7 +216,9 @@ class CinepassionAgent(Agent.Movies):
 			cp_title_sort = updateXMLresult.find('sorttitle')
 			if cp_title_sort != None and cp_title_sort.text != None:
 				metadata.title_sort = cp_title_sort.text.strip().replace('&#39;','\'')
-				Log.Debug("[cine-passion Agent] Adding title sort : %s" %(metadata.title_sort))
+			else:
+				metadata.title_sort = metadata.title
+			Log.Debug("[cine-passion Agent] Adding title sort : %s" %(metadata.title_sort))
 			
 			#summary
 			cp_summary = updateXMLresult.find('plot')
@@ -373,7 +375,7 @@ class CinepassionAgent(Agent.Movies):
 			# First results should be more acruate.
 			score = score - 1
 
-	# Search on Google and BING to get Allociné ID (Big Thanks to IMDB Agent :-)
+	# Search on Google and BING to get Allociné ID
 	if media.year:
 	  searchYear = ' (' + str(media.year) + ')'
 	else:
