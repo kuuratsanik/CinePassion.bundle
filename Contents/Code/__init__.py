@@ -10,7 +10,7 @@
 
 import datetime, unicodedata, re, urllib2, base64, sha
 
-CP_AGENT_VER = 'v1.9.2'
+CP_AGENT_VER = 'v1.9.3'
 CP_API_KEY = '8a7129b8f3edd95b7d969dfc2c8e9d9d'
 # WARNING : If you want to use the Ciné-Passion DDB for your project, don't use this key but 
 # ask a free one on this page : http://passion-xbmc.org/demande-clef-api-api-key-request/
@@ -203,7 +203,7 @@ class CinepassionAgent(Agent.Movies):
 			#original_title
 			cp_originalTitle = updateXMLresult.find('originaltitle')
 			if cp_originalTitle != None and cp_originalTitle.text != None:
-				metadata.original_title = cp_originalTitle.text.strip()
+				metadata.original_title = cp_originalTitle.text.strip().replace('&#39;','\'')
 				Log.Debug("[cine-passion Agent] Adding original title : %s" %(metadata.original_title))
 			
 			#title
@@ -212,11 +212,13 @@ class CinepassionAgent(Agent.Movies):
 				metadata.title = cp_title.text.strip().replace('&#39;','\'')
 				Log.Debug("[cine-passion Agent] Adding title : %s" %(metadata.title))
 			
-			#title sort => asked to Elan to modify framework for this, waiting ...
-			#cp_title_sort = updateXMLresult.find('sorttitle')
-			#if cp_title_sort != None and cp_title_sort.text != None:
-			#	metadata.title_sort = cp_title_sort.text.strip().replace('&#39;','\'')
-			#	Log.Debug("[cine-passion Agent] Adding title sort : %s" %(metadata.title_sort))
+			#title sort
+			cp_title_sort = updateXMLresult.find('sorttitle')
+			if cp_title_sort != None and cp_title_sort.text != None:
+				metadata.title_sort = cp_title_sort.text.strip().replace('&#39;','\'')
+			else:
+				metadata.title_sort = metadata.title
+			Log.Debug("[cine-passion Agent] Adding title sort : %s" %(metadata.title_sort))
 			
 			#summary
 			cp_summary = updateXMLresult.find('plot')
@@ -342,7 +344,6 @@ class CinepassionAgent(Agent.Movies):
 
 			
 	### Tags not used
-	#title_sort : present in DDB but not in Plex framework
 	#content_rating_age : not in DDB
 	#banners : not in DDB
 	#themes : not in DDB
@@ -374,7 +375,7 @@ class CinepassionAgent(Agent.Movies):
 			# First results should be more acruate.
 			score = score - 1
 
-	# Search on Google and BING to get Allociné ID (Big Thanks to IMDB Agent :-)
+	# Search on Google and BING to get Allociné ID
 	if media.year:
 	  searchYear = ' (' + str(media.year) + ')'
 	else:
