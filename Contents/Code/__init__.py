@@ -375,7 +375,7 @@ class CinepassionAgent(Agent.Movies):
 			# First results should be more acruate.
 			score = score - 1
 
-	# Search on Google and BING to get Allociné ID
+	# Search on Google to get Allociné ID
 	if media.year:
 	  searchYear = ' (' + str(media.year) + ')'
 	else:
@@ -384,12 +384,14 @@ class CinepassionAgent(Agent.Movies):
 	normalizedName = self.stripAccents(media.name)
 	GOOGLE_JSON_QUOTES = GOOGLE_JSON_URL % (self.getPublicIP(), String.Quote('"' + normalizedName + searchYear + '"', usePlus=True)) + '+site:allocine.fr/film/fichefilm_gen_cfilm'
 	GOOGLE_JSON_NOQUOTES = GOOGLE_JSON_URL % (self.getPublicIP(), String.Quote(normalizedName + searchYear, usePlus=True)) + '+site:allocine.fr/film/fichefilm_gen_cfilm'
-	BING_JSON = BING_JSON_URL % String.Quote(normalizedName + searchYear, usePlus=True) + '+site:allocine.fr/film'
+	
+	#REMOVE Bing API Search since it's not not upper 5000 hits ...
+	#BING_JSON = BING_JSON_URL % String.Quote(normalizedName + searchYear, usePlus=True) + '+site:allocine.fr/film'
 
 	#Reinit classment score since CinePassion can shift good movies.
 	score = 99
 
-	for s in [GOOGLE_JSON_QUOTES, GOOGLE_JSON_NOQUOTES, BING_JSON]:
+	for s in [GOOGLE_JSON_QUOTES, GOOGLE_JSON_NOQUOTES]:
 		if s == GOOGLE_JSON_QUOTES and (media.name.count(' ') == 0 or media.name.count('&') > 0 or media.name.count(' and ') > 0):
 			# no reason to run this test, plus it screwed up some searches
 			continue
