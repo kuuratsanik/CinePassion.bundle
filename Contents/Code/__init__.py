@@ -10,7 +10,7 @@
 
 import datetime, unicodedata, re, urllib2, base64, sha
 
-CP_AGENT_VER = 'v1.9.3'
+CP_AGENT_VER = 'v1.9.4'
 CP_API_KEY = '8a7129b8f3edd95b7d969dfc2c8e9d9d'
 # WARNING : If you want to use the Ciné-Passion DDB for your project, don't use this key but 
 # ask a free one on this page : http://passion-xbmc.org/demande-clef-api-api-key-request/
