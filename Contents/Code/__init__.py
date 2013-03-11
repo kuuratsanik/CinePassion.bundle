@@ -546,8 +546,11 @@ class CinepassionAgent(Agent.Movies):
 	#nameDist = Util.LevenshteinDistance(self.stripAccents(media.name.lower()), self.stripAccents(name.lower()))
 	#originalNameDist = Util.LevenshteinDistance(self.stripAccents(media.name.lower()), self.stripAccents(originalName.lower()))
 	nameDist = Util.LevenshteinDistance(media.name.lower(), name.lower())
-	originalNameDist = Util.LevenshteinDistance(media.name.lower(), originalName.lower())
-	minDist = min(nameDist, originalNameDist)
+	if originalName != None:
+		originalNameDist = Util.LevenshteinDistance(media.name.lower(), originalName.lower())
+		minDist = min(nameDist, originalNameDist)
+	else:
+			minDist = nameDist
 	scorePenalty = scorePenalty + minDist * CP_COEFF_TITLE
 	return scorePenalty
 
