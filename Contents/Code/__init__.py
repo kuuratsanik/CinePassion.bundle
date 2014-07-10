@@ -10,7 +10,7 @@
 
 import datetime, unicodedata, re, urllib2, base64, sha
 
-CP_AGENT_VER = 'v1.9.3'
+CP_AGENT_VER = 'v1.9.4'
 CP_API_KEY = '8a7129b8f3edd95b7d969dfc2c8e9d9d'
 # WARNING : If you want to use the Ciné-Passion DDB for your project, don't use this key but 
 # ask a free one on this page : http://passion-xbmc.org/demande-clef-api-api-key-request/
@@ -375,7 +375,7 @@ class CinepassionAgent(Agent.Movies):
 			# First results should be more acruate.
 			score = score - 1
 
-	# Search on Google and BING to get Allociné ID
+	# Search on Google to get Allociné ID
 	if media.year:
 	  searchYear = ' (' + str(media.year) + ')'
 	else:
@@ -384,12 +384,14 @@ class CinepassionAgent(Agent.Movies):
 	normalizedName = self.stripAccents(media.name)
 	GOOGLE_JSON_QUOTES = GOOGLE_JSON_URL % (self.getPublicIP(), String.Quote('"' + normalizedName + searchYear + '"', usePlus=True)) + '+site:allocine.fr/film/fichefilm_gen_cfilm'
 	GOOGLE_JSON_NOQUOTES = GOOGLE_JSON_URL % (self.getPublicIP(), String.Quote(normalizedName + searchYear, usePlus=True)) + '+site:allocine.fr/film/fichefilm_gen_cfilm'
-	BING_JSON = BING_JSON_URL % String.Quote(normalizedName + searchYear, usePlus=True) + '+site:allocine.fr/film'
+	
+	#REMOVE Bing API Search since it's not not upper 5000 hits ...
+	#BING_JSON = BING_JSON_URL % String.Quote(normalizedName + searchYear, usePlus=True) + '+site:allocine.fr/film'
 
 	#Reinit classment score since CinePassion can shift good movies.
 	score = 99
 
-	for s in [GOOGLE_JSON_QUOTES, GOOGLE_JSON_NOQUOTES, BING_JSON]:
+	for s in [GOOGLE_JSON_QUOTES, GOOGLE_JSON_NOQUOTES]:
 		if s == GOOGLE_JSON_QUOTES and (media.name.count(' ') == 0 or media.name.count('&') > 0 or media.name.count(' and ') > 0):
 			# no reason to run this test, plus it screwed up some searches
 			continue
@@ -546,8 +548,11 @@ class CinepassionAgent(Agent.Movies):
 	#nameDist = Util.LevenshteinDistance(self.stripAccents(media.name.lower()), self.stripAccents(name.lower()))
 	#originalNameDist = Util.LevenshteinDistance(self.stripAccents(media.name.lower()), self.stripAccents(originalName.lower()))
 	nameDist = Util.LevenshteinDistance(media.name.lower(), name.lower())
-	originalNameDist = Util.LevenshteinDistance(media.name.lower(), originalName.lower())
-	minDist = min(nameDist, originalNameDist)
+	if originalName != None:
+		originalNameDist = Util.LevenshteinDistance(media.name.lower(), originalName.lower())
+		minDist = min(nameDist, originalNameDist)
+	else:
+			minDist = nameDist
 	scorePenalty = scorePenalty + minDist * CP_COEFF_TITLE
 	return scorePenalty
 
